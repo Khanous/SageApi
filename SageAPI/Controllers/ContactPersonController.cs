@@ -55,5 +55,34 @@ namespace SageAPI.Controllers
             }
            
         }
+        public HttpResponseMessage Delete(int Id)
+        {
+            try
+            {
+                using (SageAPIEntities entities = new SageAPIEntities())
+                {
+                    var entity = entities.KHKAnsprechpartner.FirstOrDefault(e => e.Nummer == Id);
+                    if (entity == null)
+                    {
+                        return Request.CreateErrorResponse(HttpStatusCode.NotFound, "Contact Person with Id = " + Id.ToString() + " Not Found");
+
+                    }
+                    else
+                    {
+                        entities.KHKAnsprechpartner.Remove(entity);
+                        entities.SaveChanges();
+                        return Request.CreateResponse(HttpStatusCode.OK);
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ex);
+            }
+         
+        }
     }
 }
