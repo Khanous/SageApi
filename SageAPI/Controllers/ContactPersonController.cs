@@ -1,133 +1,59 @@
-﻿using System;
+﻿using Person;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
-using System.Web.Http.Description;
-using Person;
+
 
 namespace SageAPI.Controllers
 {
     public class ContactPersonController : ApiController
     {
-        private SageAPIEntities db = new SageAPIEntities();
-        int Mandant = 1;
-        // GET: api/ContactPerson
-        public IQueryable<KHKAnsprechpartner> GetKHKAnsprechpartner()
+        public IEnumerable<KHKAnsprechpartner> Get()
         {
-            return db.KHKAnsprechpartner;
+            using(SageAPIEntities entities = new SageAPIEntities())
+            {
+                return entities.KHKAnsprechpartner.ToList();
+            }
         }
-
-        // GET: api/ContactPerson/5
-        [ResponseType(typeof(KHKAnsprechpartner))]
-        public IHttpActionResult GetKHKAnsprechpartner(int id)
+        public HttpResponseMessage Get(int id )
         {
-            KHKAnsprechpartner kHKAnsprechpartner = db.KHKAnsprechpartner.Find(id, Mandant);
-            if (kHKAnsprechpartner == null)
+            using (SageAPIEntities entities = new SageAPIEntities())
             {
-                return NotFound();
-            }
-
-            return Ok(kHKAnsprechpartner);
-        }
-
-        // PUT: api/ContactPerson/5
-        [ResponseType(typeof(void))]
-        public IHttpActionResult PutKHKAnsprechpartner(int id, KHKAnsprechpartner kHKAnsprechpartner)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            if (id != kHKAnsprechpartner.Nummer)
-            {
-                return BadRequest();
-            }
-
-            db.Entry(kHKAnsprechpartner).State = EntityState.Modified;
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!KHKAnsprechpartnerExists(id))
+                var entity = entities.KHKAnsprechpartner.FirstOrDefault(e => e.Nummer == id);
+                if(entity != null)
                 {
-                    return NotFound();
+                    return Request.CreateResponse(HttpStatusCode.OK, entity);
                 }
                 else
                 {
-                    throw;
+                    return Request.CreateErrorResponse(HttpStatusCode.NotFound, "Contact Person with Id = " + id.ToString() + " Not Found");
                 }
             }
-
-            return StatusCode(HttpStatusCode.NoContent);
         }
-
-        // POST: api/ContactPerson
-        [ResponseType(typeof(KHKAnsprechpartner))]
-        public IHttpActionResult PostKHKAnsprechpartner(KHKAnsprechpartner kHKAnsprechpartner)
+        public HttpResponseMessage Post([FromBody]KHKAnsprechpartner contactPerson)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            db.KHKAnsprechpartner.Add(kHKAnsprechpartner);
-
             try
             {
-                db.SaveChanges();
-            }
-            catch (DbUpdateException)
-            {
-                if (KHKAnsprechpartnerExists(kHKAnsprechpartner.Nummer))
+                using (SageAPIEntities entities = new SageAPIEntities())
                 {
-                    return Conflict();
+                    entities.KHKAnsprechpartner.Add(contactPerson);
+                    entities.SaveChanges();
+                    var message = Request.CreateResponse(HttpStatusCode.Created, contactPerson);
+                    message.Headers.Location = new Uri(Request.RequestUri + "/" + contactPerson.Nummer);
+                    return message;
+
                 }
-                else
-                {
-                    throw;
-                }
+
             }
-
-            return CreatedAtRoute("DefaultApi", new { id = kHKAnsprechpartner.Nummer }, kHKAnsprechpartner);
-        }
-
-        // DELETE: api/ContactPerson/5
-        [ResponseType(typeof(KHKAnsprechpartner))]
-        public IHttpActionResult DeleteKHKAnsprechpartner(int id)
-        {
-            KHKAnsprechpartner kHKAnsprechpartner = db.KHKAnsprechpartner.Find(id);
-            if (kHKAnsprechpartner == null)
+            catch (Exception ex)
             {
-                return NotFound();
+
+               return  Request.CreateErrorResponse(HttpStatusCode.BadRequest, ex);
             }
-
-            db.KHKAnsprechpartner.Remove(kHKAnsprechpartner);
-            db.SaveChanges();
-
-            return Ok(kHKAnsprechpartner);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
-        private bool KHKAnsprechpartnerExists(int id)
-        {
-            return db.KHKAnsprechpartner.Count(e => e.Nummer == id) > 0;
+           
         }
     }
 }

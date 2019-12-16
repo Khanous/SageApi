@@ -11,9 +11,12 @@ namespace Person
 {
     using System;
     using System.Collections.Generic;
-    
+    using System.ComponentModel.DataAnnotations;
+    using System.ComponentModel.DataAnnotations.Schema;
+
     public partial class KHKAnsprechpartner
     {
+        
         public int Nummer { get; set; }
         public short Mandant { get; set; }
         public int Adresse { get; set; }
